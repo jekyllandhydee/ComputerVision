@@ -1,0 +1,69 @@
+//BOX FILTER USING OPENCV
+
+import org.opencv.core.Core;
+import org.opencv.core.Mat;
+import org.opencv.core.Point;
+import org.opencv.core.Size;
+import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;
+
+public class BoxFilterTest {
+   public static void main( String[] args ) {
+      // Loading the OpenCV core library
+      System.loadLibrary( Core.NATIVE_LIBRARY_NAME );
+
+      // Reading the Image from the file and storing it in to a Matrix object
+      String file = "E:/OpenCV/chap11/filter_input.jpg";
+      Mat src = Imgcodecs.imread(file);
+
+      // Creating an empty matrix to store the result
+      Mat dst = new Mat();
+
+      // Creating the objects for Size and Point
+      Size size = new Size(45, 45);
+      Point point = Point(-1, -1);
+
+      // Applying Box Filter effect on the Image
+      Imgproc.boxFilter(src, dst, 50, size, point, true, Core.BORDER_DEFAULT);
+
+      // Writing the image
+      Imgcodecs.imwrite("E:/OpenCV/chap11/boxfilterjpg", dst);
+
+      System.out.println("Image Processed");
+   }
+}
+
+
+//BOX FILTER USING VPI 
+
+//1)Initialization phase
+
+//Include the header that defines the box filter function.
+  #include <vpi/algo/BoxFilter.h>
+//Define the input image object.
+    VPIImage input = /*...*/;
+//Create the output image. It gets its dimensions and format from the input image.
+    int32_t w, h;
+    vpiImageGetSize(input, &w, &h);
+ 
+    VPIImageFormat type;
+    vpiImageGetFormat(input, &type);
+ 
+    VPIImage output;
+    vpiImageCreate(w, h, type, 0, &output);
+//Create the stream where the algorithm will be submitted for execution.
+    VPIStream stream;
+    vpiStreamCreate(0, &stream);
+//2)Processing phase
+
+//Submit the algorithm to the stream along with other parameters. In this case it's a 5x5 box filter with clamp border extension. It'll be executed by the CUDA backend.
+    vpiSubmitBoxFilter(stream, VPI_BACKEND_CUDA, input, output, 5, 5, VPI_BORDER_ZERO);
+//Optionally, wait until the processing is done.
+    vpiStreamSync(stream);
+    
+//3)Cleanup phase
+//Free resources held by the stream and the input and output images.
+    vpiStreamDestroy(stream);
+    vpiImageDestroy(input);
+    vpiImageDestroy(output);
+    vpiStreamCreate(0, &stream);
